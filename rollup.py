@@ -4,6 +4,10 @@
 #   This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
 #   (CC BY-SA-3.0) http://creativecommons.org/licenses/by-sa/3.0/
 
+# For the latest version, visit:
+#   https://github.com/fracai/zfs-rollup
+#   https://bitbucket.org/fracai/zfs-rollup
+
 # A snapshot pruning script, similar in behavior to Apple's TimeMachine
 # Keep hourly snapshots for the last day, daily for the last week, and weekly thereafter.
 # Also prune empty snapshots (0 bytes used) that aren't the most recent for any dataset
