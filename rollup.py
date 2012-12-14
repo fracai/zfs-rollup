@@ -16,12 +16,12 @@
 #   arguments for configuring snapshots to keep (# daily, # weekly, etc)
 #   define arbitrary intervals (daily = 86400, quarter-hour = 900, etc)
 #   configuration file support
-#   different intervals for different dataset roots (? can also just run multiple rollups)
 #   rollup based on local time, not UTC
 #     requires pytz, or manually determining and converting time offsets
+#   arguments to select intervals, modify existing intervals, add new intervals
 
 # TEST:
-#   
+#   arbitrary intervals !!!! current code untested
 
 import datetime
 import calendar
