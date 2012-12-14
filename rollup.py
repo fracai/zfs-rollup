@@ -21,8 +21,7 @@
 #     requires pytz, or manually determining and converting time offsets
 
 # TEST:
-#   recursive argument
-#   empty argument
+#
 
 import datetime
 import calendar
