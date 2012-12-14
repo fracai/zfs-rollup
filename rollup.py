@@ -93,7 +93,7 @@ for dataset in sorted(snapshots.keys()):
         # enforce that this is an automated snapshot (presence of 'auto')
         if "auto" not in snapshot:
             print "\tignoring:\t", "@"+snapshot
-            #continue
+            continue
 
         prune = True
 
@@ -111,8 +111,7 @@ for dataset in sorted(snapshots.keys()):
     for snapshot in sorted_snapshots:
         # enforce that this is an automated snapshot (presence of 'auto')
         if "auto" not in snapshot:
-            print "\tignoring:\t", "@"+snapshot
-            #continue
+            continue
         
         prune = True
         
