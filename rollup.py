@@ -48,14 +48,17 @@ one_week = datetime.timedelta(weeks = 1)
 snapshots = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
 
 for dataset in args.datasets:
-    zfs_arguments = "-Hrpo" if args.recursive else "-Hpo"
-    zfs_snapshots = subprocess.check_output(["zfs", "get", zfs_arguments, "name,property,value", "creation,used", dataset])
+    zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo", "name,property,value", "creation,used", dataset])
 
     for snapshot in zfs_snapshots.splitlines():
         name,property,value = snapshot.split('\t',3)
 
         # enforce that this is a snapshot (presence of '@')
         if "@" not in name:
+            continue
+        
+        # if the rollup isn't recursive, skip any snapshots from child datasets
+        if not args.recursive and not name.startswith(dataset+"@"):
             continue
         
         dataset,snapshot = name.split('@',2)
