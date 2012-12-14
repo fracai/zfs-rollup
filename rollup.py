@@ -21,14 +21,24 @@
 #     requires pytz, or manually determining and converting time offsets
 
 # TEST:
-#
+#   
 
 import datetime
 import calendar
+import time
 import subprocess
 import argparse
 import sys
 from collections import defaultdict
+
+intervals = {}
+intervals['hourly']  = { 'max' : 24, 'abbreviation':'h', 'reference' : '%Y-%m-%d %H' }
+intervals['daily']   = { 'max' :  7, 'abbreviation':'d', 'reference' : '%Y-%m-%d' }
+intervals['weekly']  = { 'max' :  0, 'abbreviation':'w', 'reference' : '%Y-%W' }
+intervals['monthly'] = { 'max' : 12, 'abbreviation':'m', 'reference' : '%Y-%m' }
+intervals['yearly']  = { 'max' : 10, 'abbreviation':'y', 'reference' : '%Y' }
+
+used_intervals = [ 'hourly', 'daily', 'weekly' ]
 
 parser = argparse.ArgumentParser(description='Prune excess snapshots, keeping hourly for the last day, daily for the last week, and weekly thereafter.')
 parser.add_argument('datasets', nargs='+', help='the root dataset(s) from which to prune snapshots')
@@ -73,6 +83,8 @@ for dataset in sorted(snapshots.keys()):
     sorted_snapshots = sorted(snapshots[dataset].keys())
     most_recent = sorted_snapshots[-1]
     
+    rollup_intervals = defaultdict(lambda : defaultdict(int))
+    
     hours = []
     days = {}
     weeks = {}
@@ -81,35 +93,45 @@ for dataset in sorted(snapshots.keys()):
         # enforce that this is an automated snapshot (presence of 'auto')
         if "auto" not in snapshot:
             print "\tignoring:\t", "@"+snapshot
-            continue
+            #continue
 
         prune = True
 
         epoch = snapshots[dataset][snapshot]['creation']
         
-        snaptime = datetime.datetime.utcfromtimestamp(float(epoch))
-        snapdate = snaptime.date()
-        snapweek = str(snapdate.isocalendar()[0])+"-"+str(snapdate.isocalendar()[1])
-
-        if (not args.empty or snapshots[dataset][snapshot]['used'] != '0') or snapshot == most_recent:
-            if snaptime >= now - one_day:
-                hours.append(epoch)
-                prune = False
+        for interval in used_intervals:
+            reference = time.strftime(intervals[interval]['reference'], time.gmtime(float(epoch)))
             
-            if snaptime >= now - one_week and snapdate not in days:
-                days[snapdate] = epoch
-                prune = False
-            
-            if snapweek not in weeks:
-                weeks[snapweek] = epoch
-                prune = False
+            if reference not in rollup_intervals[interval]:
+                if intervals[interval]['max'] != 0 and len(rollup_intervals[interval]) > intervals[interval]['max']:
+                    rollup_intervals[interval].pop(sorted(rollup_intervals[interval].keys())[0])
+                rollup_intervals[interval][reference] = epoch
         
+        
+    for snapshot in sorted_snapshots:
+        # enforce that this is an automated snapshot (presence of 'auto')
+        if "auto" not in snapshot:
+            print "\tignoring:\t", "@"+snapshot
+            #continue
+        
+        prune = True
+        
+        epoch = snapshots[dataset][snapshot]['creation']
+        
+        for interval in used_intervals:
+            reference = time.strftime(intervals[interval]['reference'], time.gmtime(float(epoch)))
+            if reference in rollup_intervals[interval]:
+                prune = False
+
         if prune or args.verbose:
             print "\t","pruning\t" if prune else " \t", "@"+snapshot, 
             if args.verbose:
-                print 'h' if epoch in hours else '-', 
-                print 'd' if snapdate in days and days[snapdate] == epoch else '-', 
-                print 'w' if snapweek in weeks and weeks[snapweek] == epoch else '-',
+                for interval in used_intervals:
+                    reference = time.strftime(intervals[interval]['reference'], time.gmtime(float(epoch)))
+                    if rollup_intervals[interval][reference] == epoch:
+                        print intervals[interval]['abbreviation'],
+                    else:
+                        print '-',
                 print snapshots[dataset][snapshot]['used']
             else:
                 print
