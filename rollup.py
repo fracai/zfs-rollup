@@ -85,10 +85,6 @@ for dataset in sorted(snapshots.keys()):
     
     rollup_intervals = defaultdict(lambda : defaultdict(int))
     
-    hours = []
-    days = {}
-    weeks = {}
-    
     for snapshot in sorted_snapshots:
         # enforce that this is an automated snapshot (presence of 'auto')
         if "auto" not in snapshot:
