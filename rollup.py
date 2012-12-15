@@ -30,11 +30,11 @@ import sys
 from collections import defaultdict
 
 intervals = {}
-intervals['hourly']  = { 'max' : 24, 'abbreviation':'h', 'reference' : '%Y-%m-%d %H' }
-intervals['daily']   = { 'max' :  7, 'abbreviation':'d', 'reference' : '%Y-%m-%d' }
-intervals['weekly']  = { 'max' :  0, 'abbreviation':'w', 'reference' : '%Y-%W' }
-intervals['monthly'] = { 'max' : 12, 'abbreviation':'m', 'reference' : '%Y-%m' }
-intervals['yearly']  = { 'max' : 10, 'abbreviation':'y', 'reference' : '%Y' }
+intervals['hourly']  = { 'max':24, 'abbreviation':'h', 'reference':'%Y-%m-%d %H' }
+intervals['daily']   = { 'max': 7, 'abbreviation':'d', 'reference':'%Y-%m-%d' }
+intervals['weekly']  = { 'max': 0, 'abbreviation':'w', 'reference':'%Y-%W' }
+intervals['monthly'] = { 'max':12, 'abbreviation':'m', 'reference':'%Y-%m' }
+intervals['yearly']  = { 'max':10, 'abbreviation':'y', 'reference':'%Y' }
 
 modifiers = {
     'h' : 60,
@@ -74,31 +74,37 @@ if args.intervals:
         if interval.count(':') == 1:
             period,count = interval.split(':')
             
+            try:
+                int(count)
+            except ValueError:
+                print "invalid count: "+count
+                sys.exit(1)
+            
             if period in intervals:
                 used_intervals[period] = intervals[period]
                 used_intervals[period]['max'] = count
                 
             else:
-                if period[-1] in modifiers:
-                    used_intervals[interval] = { 'max' : count, 'interval' : int(period[:-1]) * modifiers[period[-1]] }
-                    
-                elif int(period):
-                    used_intervals[interval] = { 'max' : count, 'interval' : int(period) }
+                try:
+                    if period[-1] in modifiers:
+                        used_intervals[interval] = { 'max' : count, 'interval' : int(period[:-1]) * modifiers[period[-1]] }
+                    else:
+                        used_intervals[interval] = { 'max' : count, 'interval' : int(period) }
+                        
+                except ValueError:
+                    print "invalid period: "+period
+                    sys.exit(1)
                     
         elif interval.count(':') == 0 and interval in intervals:
             used_intervals[interval] = intervals[interval]
+            
+        else:
+            print "invalid interval: "+interval
+            sys.exit(1)            
 
 for interval in used_intervals:
     if 'abbreviation' not in used_intervals[interval]:
         used_intervals[interval]['abbreviation'] = interval
-
-print used_intervals
-
-now = datetime.datetime.utcnow()
-
-one_hour = datetime.timedelta(hours = 1)
-one_day  = datetime.timedelta(days  = 1)
-one_week = datetime.timedelta(weeks = 1)
 
 snapshots = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
 
@@ -117,6 +123,13 @@ for dataset in args.datasets:
             continue
         
         dataset,snapshot = name.split('@',2)
+        
+        # enforce that this is an automated snapshot (presence of 'auto')
+        if "auto" not in snapshot:
+            if property == 'creation':
+                print "ignoring:\t", dataset+"@"+snapshot
+            continue
+        
         snapshots[dataset][snapshot][property] = value
 
 for dataset in sorted(snapshots.keys()):
@@ -128,11 +141,6 @@ for dataset in sorted(snapshots.keys()):
     rollup_intervals = defaultdict(lambda : defaultdict(int))
     
     for snapshot in sorted_snapshots:
-        # enforce that this is an automated snapshot (presence of 'auto')
-        if "auto" not in snapshot:
-            print "\tignoring:\t", "@"+snapshot
-            continue
-
         prune = True
 
         epoch = snapshots[dataset][snapshot]['creation']
@@ -154,10 +162,6 @@ for dataset in sorted(snapshots.keys()):
                     rollup_intervals[interval][epoch] = epoch
         
     for snapshot in sorted_snapshots:
-        # enforce that this is an automated snapshot (presence of 'auto')
-        if "auto" not in snapshot:
-            continue
-        
         prune = True
         
         epoch = snapshots[dataset][snapshot]['creation']
