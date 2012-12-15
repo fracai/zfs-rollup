@@ -57,10 +57,9 @@ parser.add_argument('--verbose', '-v', action="store_true", default=False, help=
 parser.add_argument('--empty', '-z', action="store_true", default=False, help='prune empty snashots (will still retain the most recent even if empty)')
 parser.add_argument('--recursive', '-r', action="store_true", default=False, help='recursively pruning snapshots from nested datasets')
 parser.add_argument("--intervals", "-i", 
-    help="modify existing and define new snapshot intervals. either name existing intervals "+
-    "("+", ".join(intervals.keys())+"), modify the number of those to store (hourly:12), "+
-    "or define new intervals according to interval:count (2h:12). Multiple intervals may be "+
-    "specified if comma seperated (hourly,daily:30,2h12)."
+    help="modify existing and define new snapshot intervals. either name existing intervals ("+", ".join(intervals.keys())+"), "+
+    "modify the number of those to store (hourly:12), or define new intervals according to interval:count (2h:12). "+
+    "Multiple intervals may be specified if comma seperated (hourly,daily:30,2h12)."
 )
 
 args = parser.parse_args()
