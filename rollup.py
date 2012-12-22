@@ -10,7 +10,6 @@
 
 # A snapshot pruning script, similar in behavior to Apple's TimeMachine
 # Keep hourly snapshots for the last day, daily for the last week, and weekly thereafter.
-# Also prune empty snapshots (0 bytes used) that aren't the most recent for any dataset
 
 # TODO: 
 #   configuration file support (?)
@@ -54,7 +53,6 @@ parser = argparse.ArgumentParser(description='Prune excess snapshots, keeping ho
 parser.add_argument('datasets', nargs='+', help='the root dataset(s) from which to prune snapshots')
 parser.add_argument('--test', '-t', action="store_true", default=False, help='only display the snapshots that would be deleted, without actually deleting them')
 parser.add_argument('--verbose', '-v', action="store_true", default=False, help='display verbose information about which snapshots are kept, pruned, and why')
-parser.add_argument('--empty', '-z', action="store_true", default=False, help='prune empty snashots (will still retain the most recent even if empty)')
 parser.add_argument('--recursive', '-r', action="store_true", default=False, help='recursively pruning snapshots from nested datasets')
 parser.add_argument("--intervals", "-i", 
     help="modify existing and define new snapshot intervals. either name existing intervals ("+", ".join(intervals.keys())+"), "+
