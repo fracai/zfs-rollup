@@ -146,12 +146,12 @@ for dataset in sorted(snapshots.keys()):
                 reference = time.strftime(used_intervals[interval]['reference'], time.gmtime(float(epoch)))
                 
                 if reference not in rollup_intervals[interval]:
-                    if used_intervals[interval]['max'] != 0 and len(rollup_intervals[interval]) > int(used_intervals[interval]['max']):
+                    if used_intervals[interval]['max'] != 0 and len(rollup_intervals[interval]) >= int(used_intervals[interval]['max']):
                         rollup_intervals[interval].pop(sorted(rollup_intervals[interval].keys())[0])
                     rollup_intervals[interval][reference] = epoch
             
             elif 'interval' in used_intervals[interval]:
-                if used_intervals[interval]['max'] != 0 and len(rollup_intervals[interval]) > int(used_intervals[interval]['max']):
+                if used_intervals[interval]['max'] != 0 and len(rollup_intervals[interval]) >= int(used_intervals[interval]['max']):
                     rollup_intervals[interval].pop(sorted(rollup_intervals[interval].keys())[0])
                 
                 if (not rollup_intervals[interval]) or int(sorted(rollup_intervals[interval].keys())[-1]) + (used_intervals[interval]['interval']*60*.9) < int(epoch):
