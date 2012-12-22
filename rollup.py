@@ -12,13 +12,11 @@
 # Keep hourly snapshots for the last day, daily for the last week, and weekly thereafter.
 
 # TODO: 
-#   configuration file support (?)
 #   rollup based on local time, not UTC
 #     requires pytz, or manually determining and converting time offsets
 #   improve documentation
 
 # TEST:
-#   arbitrary intervals (looks good so far)
 
 import datetime
 import calendar
