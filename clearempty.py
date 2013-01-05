@@ -24,10 +24,10 @@ args = parser.parse_args()
 
 deleted_snapshots = []
 
-snapshotdeleted = True
+snapshot_was_deleted = True
 
-while snapshotdeleted:
-   snapshotdeleted = False
+while snapshot_was_deleted:
+   snapshot_was_deleted = False
    snapshots = defaultdict(lambda : defaultdict(int))
 
    # Get properties of all snapshots of the selected datasets
@@ -63,32 +63,32 @@ while snapshotdeleted:
    unique_datasets = set([snapshots[name]['dataset'] for name in snapshots])
 
    for dataset in unique_datasets:
-      snapshots_curds = {name:snapshots[name] for name in snapshots if snapshots[name]['dataset'] == dataset}
+      dataset_snapshot = {name:snapshots[name] for name in snapshots if snapshots[name]['dataset'] == dataset}
       # Remove newest snapshot from candidate list
-      newest_name = max(snapshots_curds, key=lambda name: snapshots_curds[name]['sstime'])
-      del snapshots_curds[newest_name]
+      newest_name = max(dataset_snapshot, key=lambda name: dataset_snapshot[name]['sstime'])
+      del dataset_snapshot[newest_name]
 
       # Ignore zero length or special freenas-flagged snapshots
-      for name in snapshots_curds.keys():
-         if not snapshots_curds[name]['used'] == '0' \
-            or not snapshots_curds[name]['freenas:state'] == '-':
-            del snapshots_curds[name]
+      for name in dataset_snapshot.keys():
+         if not dataset_snapshot[name]['used'] == '0' \
+            or not dataset_snapshot[name]['freenas:state'] == '-':
+            del dataset_snapshot[name]
 
       # Stop processing this dataset if no snapshots are in the list
-      if not snapshots_curds:
+      if not dataset_snapshot:
          continue
 
-      nametodelete = min(snapshots_curds,key=lambda name: snapshots_curds[name]['sstime'])
-      print "Destroying snapshot", nametodelete, "..."
+      snapshot_to_delete = min(dataset_snapshot,key=lambda name: dataset_snapshot[name]['sstime'])
+      print "Destroying snapshot", snapshot_to_delete, "..."
 
       # Sanity checks
-      if not "@auto-" in nametodelete:
+      if not "@auto-" in snapshot_to_delete:
          break
-      if not snapshots_curds[nametodelete]['used'] == '0':
+      if not dataset_snapshot[snapshot_to_delete]['used'] == '0':
          break
 
       if args.test:
-         deleted_snapshots.append(nametodelete)
+         deleted_snapshots.append(snapshot_to_delete)
       else:
-         subprocess.call(["zfs", "destroy", nametodelete])
-      snapshotdeleted = True
+         subprocess.call(["zfs", "destroy", snapshot_to_delete])
+      snapshot_was_deleted = True
