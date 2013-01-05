@@ -11,26 +11,16 @@
 # does not remove the latest snapshot of each dataset, manual snapshots and
 # any snapshot with the 'freenas:type' property set.
 
-# TODO: 
-#   Fix recursive option.
-
 import subprocess
 import argparse
-#import sys
 from collections import defaultdict
 
 parser = argparse.ArgumentParser(description='Removes empty auto snapshots.')
 parser.add_argument('datasets', nargs='+', help='the root dataset(s) from which to remove snapshots')
 parser.add_argument('--test', '-t', action="store_true", default=False, help='only display the snapshots that would be deleted, without actually deleting them. Note that due to dependencies between snapshots, this may not match what would really happen.')
-#parser.add_argument('--verbose', '-v', action="store_true", default=False, help='display verbose information about which snapshots are kept, pruned, and why')
 parser.add_argument('--recursive', '-r', action="store_true", default=False, help='recursively removes snapshots from nested datasets')
 
 args = parser.parse_args()
-
-#if args.test:
-#    args.verbose = True
-
-zfs_arguments = "-Hrpo"
 
 deleted_snapshots = []
 
