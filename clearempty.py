@@ -27,68 +27,68 @@ deleted_snapshots = []
 snapshot_was_deleted = True
 
 while snapshot_was_deleted:
-   snapshot_was_deleted = False
-   snapshots = defaultdict(lambda : defaultdict(int))
+    snapshot_was_deleted = False
+    snapshots = defaultdict(lambda : defaultdict(int))
 
-   # Get properties of all snapshots of the selected datasets
-   for dataset in args.datasets:
-      zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo name,property,value", "type,used,freenas:state", dataset])
-      for snapshot in zfs_snapshots.splitlines():
-         name,property,value = snapshot.split('\t',3)
-         if not args.recursive and not name.startswith(dataset+"@"):
+    # Get properties of all snapshots of the selected datasets
+    for dataset in args.datasets:
+        zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo name,property,value", "type,used,freenas:state", dataset])
+        for snapshot in zfs_snapshots.splitlines():
+            name,property,value = snapshot.split('\t',3)
+            if not args.recursive and not name.startswith(dataset+"@"):
+                continue
+            snapshots[name][property] = value
+
+    # Ignore non-snapshots and not-auto-snapshots
+    for name in snapshots.keys():
+        if not snapshots[name]['type'] == 'snapshot' \
+            or not "@auto-" in name:
+            del snapshots[name]
+
+    # Remove already destroyed snapshots
+    for name in deleted_snapshots:
+        if name in snapshots:
+            del snapshots[name]
+
+    # Stop if no snapshots are in the list
+    if not snapshots:
+        break
+
+    # Get snapshot dates
+    for name in snapshots:
+        dataset,sstime = name.split('@auto-')
+        snapshots[name]['dataset'] = dataset
+        snapshots[name]['sstime'] = sstime
+
+    unique_datasets = set([snapshots[name]['dataset'] for name in snapshots])
+
+    for dataset in unique_datasets:
+        dataset_snapshot = {name:snapshots[name] for name in snapshots if snapshots[name]['dataset'] == dataset}
+        # Remove newest snapshot from candidate list
+        newest_name = max(dataset_snapshot, key=lambda name: dataset_snapshot[name]['sstime'])
+        del dataset_snapshot[newest_name]
+
+        # Ignore zero length or special freenas-flagged snapshots
+        for name in dataset_snapshot.keys():
+            if not dataset_snapshot[name]['used'] == '0' \
+                or not dataset_snapshot[name]['freenas:state'] == '-':
+                del dataset_snapshot[name]
+
+        # Stop processing this dataset if no snapshots are in the list
+        if not dataset_snapshot:
             continue
-         snapshots[name][property] = value
 
-   # Ignore non-snapshots and not-auto-snapshots
-   for name in snapshots.keys():
-      if not snapshots[name]['type'] == 'snapshot' \
-         or not "@auto-" in name:
-         del snapshots[name]
+        snapshot_to_delete = min(dataset_snapshot,key=lambda name: dataset_snapshot[name]['sstime'])
+        print "Destroying snapshot", snapshot_to_delete, "..."
 
-   # Remove already destroyed snapshots
-   for name in deleted_snapshots:
-      if name in snapshots:
-         del snapshots[name]
+        # Sanity checks
+        if not "@auto-" in snapshot_to_delete:
+            break
+        if not dataset_snapshot[snapshot_to_delete]['used'] == '0':
+            break
 
-   # Stop if no snapshots are in the list
-   if not snapshots:
-      break
-
-   # Get snapshot dates
-   for name in snapshots:
-      dataset,sstime = name.split('@auto-')
-      snapshots[name]['dataset'] = dataset
-      snapshots[name]['sstime'] = sstime
-
-   unique_datasets = set([snapshots[name]['dataset'] for name in snapshots])
-
-   for dataset in unique_datasets:
-      dataset_snapshot = {name:snapshots[name] for name in snapshots if snapshots[name]['dataset'] == dataset}
-      # Remove newest snapshot from candidate list
-      newest_name = max(dataset_snapshot, key=lambda name: dataset_snapshot[name]['sstime'])
-      del dataset_snapshot[newest_name]
-
-      # Ignore zero length or special freenas-flagged snapshots
-      for name in dataset_snapshot.keys():
-         if not dataset_snapshot[name]['used'] == '0' \
-            or not dataset_snapshot[name]['freenas:state'] == '-':
-            del dataset_snapshot[name]
-
-      # Stop processing this dataset if no snapshots are in the list
-      if not dataset_snapshot:
-         continue
-
-      snapshot_to_delete = min(dataset_snapshot,key=lambda name: dataset_snapshot[name]['sstime'])
-      print "Destroying snapshot", snapshot_to_delete, "..."
-
-      # Sanity checks
-      if not "@auto-" in snapshot_to_delete:
-         break
-      if not dataset_snapshot[snapshot_to_delete]['used'] == '0':
-         break
-
-      if args.test:
-         deleted_snapshots.append(snapshot_to_delete)
-      else:
-         subprocess.call(["zfs", "destroy", snapshot_to_delete])
-      snapshot_was_deleted = True
+        if args.test:
+            deleted_snapshots.append(snapshot_to_delete)
+        else:
+            subprocess.call(["zfs", "destroy", snapshot_to_delete])
+        snapshot_was_deleted = True
