@@ -13,6 +13,7 @@
 
 import subprocess
 import argparse
+import sys
 from collections import defaultdict
 
 parser = argparse.ArgumentParser(description='Removes empty auto snapshots.')
@@ -22,73 +23,60 @@ parser.add_argument('--recursive', '-r', action="store_true", default=False, hel
 
 args = parser.parse_args()
 
-deleted_snapshots = []
+deleted = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
 
 snapshot_was_deleted = True
 
 while snapshot_was_deleted:
     snapshot_was_deleted = False
-    snapshots = defaultdict(lambda : defaultdict(int))
+    snapshots = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
 
     # Get properties of all snapshots of the selected datasets
     for dataset in args.datasets:
-        zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo name,property,value", "type,used,freenas:state", dataset])
+        zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo name,property,value", "type,creation,used,freenas:state", dataset])
+
         for snapshot in zfs_snapshots.splitlines():
             name,property,value = snapshot.split('\t',3)
+
+            # enforce that this is a snapshot (presence of '@')
+            if "@" not in name:
+                continue
+
+            # if the rollup isn't recursive, skip any snapshots from child datasets
             if not args.recursive and not name.startswith(dataset+"@"):
                 continue
-            snapshots[name][property] = value
+            
+            dataset,snapshot = name.split('@',2)
+            
+            snapshots[dataset][snapshot][property] = value
 
     # Ignore non-snapshots and not-auto-snapshots
-    for name in snapshots.keys():
-        if not snapshots[name]['type'] == 'snapshot' \
-            or not "@auto-" in name:
-            del snapshots[name]
-
     # Remove already destroyed snapshots
-    for name in deleted_snapshots:
-        if name in snapshots:
-            del snapshots[name]
+    for dataset in snapshots.keys():
+        for snapshot in snapshots[dataset].keys():
+            if not snapshot.startswith("auto-") \
+                or snapshots[dataset][snapshot]['type'] != "snapshot" \
+                or snapshots[dataset][snapshot]['used'] != '0' \
+                or snapshot in deleted[dataset].keys():
+                del snapshots[dataset][snapshot]
 
-    # Stop if no snapshots are in the list
-    if not snapshots:
-        break
+        snapshot = max(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'])
+        del snapshots[dataset][snapshot]
 
-    # Get snapshot dates
-    for name in snapshots:
-        dataset,sstime = name.split('@auto-')
-        snapshots[name]['dataset'] = dataset
-        snapshots[name]['sstime'] = sstime
-
-    unique_datasets = set([snapshots[name]['dataset'] for name in snapshots])
-
-    for dataset in unique_datasets:
-        dataset_snapshot = {name:snapshots[name] for name in snapshots if snapshots[name]['dataset'] == dataset}
-        # Remove newest snapshot from candidate list
-        newest_name = max(dataset_snapshot, key=lambda name: dataset_snapshot[name]['sstime'])
-        del dataset_snapshot[newest_name]
-
-        # Ignore zero length or special freenas-flagged snapshots
-        for name in dataset_snapshot.keys():
-            if not dataset_snapshot[name]['used'] == '0' \
-                or not dataset_snapshot[name]['freenas:state'] == '-':
-                del dataset_snapshot[name]
-
-        # Stop processing this dataset if no snapshots are in the list
-        if not dataset_snapshot:
+        # Stop if no snapshots are in the list
+        if not snapshots[dataset]:
+            del snapshots[dataset]
             continue
 
-        snapshot_to_delete = min(dataset_snapshot,key=lambda name: dataset_snapshot[name]['sstime'])
-        print "Destroying snapshot", snapshot_to_delete, "..."
+        snapshot = max(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'])
+        if not args.test:
+            # destroy the snapshot
+            subprocess.call(["zfs", "destroy", dataset+"@"+snapshot])
 
-        # Sanity checks
-        if not "@auto-" in snapshot_to_delete:
-            break
-        if not dataset_snapshot[snapshot_to_delete]['used'] == '0':
-            break
-
-        if args.test:
-            deleted_snapshots.append(snapshot_to_delete)
-        else:
-            subprocess.call(["zfs", "destroy", snapshot_to_delete])
+        deleted[dataset][snapshot] = snapshots[dataset][snapshot]
         snapshot_was_deleted = True
+
+for dataset in sorted(deleted.keys()):
+    print dataset
+    for snapshot in sorted(deleted[dataset].keys()):
+        print "\t", snapshot, deleted[dataset][snapshot]['used']
