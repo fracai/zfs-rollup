@@ -92,4 +92,3 @@ while snapshotdeleted:
       else:
          subprocess.call(["zfs", "destroy", nametodelete])
       snapshotdeleted = True
-
