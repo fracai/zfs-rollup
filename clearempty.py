@@ -60,6 +60,11 @@ while snapshot_was_deleted:
                 or snapshot in deleted[dataset].keys():
                 del snapshots[dataset][snapshot]
 
+        # Stop if no snapshots are in the list
+        if not snapshots[dataset]:
+            del snapshots[dataset]
+            continue
+
         snapshot = max(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'])
         del snapshots[dataset][snapshot]
 
@@ -77,6 +82,8 @@ while snapshot_was_deleted:
         snapshot_was_deleted = True
 
 for dataset in sorted(deleted.keys()):
+    if not deleted[dataset]:
+        continue
     print dataset
     for snapshot in sorted(deleted[dataset].keys()):
         print "\t", snapshot, deleted[dataset][snapshot]['used']
