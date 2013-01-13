@@ -37,15 +37,14 @@ while snapshot_was_deleted:
         for snapshot in zfs_snapshots.splitlines():
             name,property,value = snapshot.split('\t',3)
 
-            # enforce that this is a snapshot (presence of '@')
-            if "@" not in name:
-                continue
-
             # if the rollup isn't recursive, skip any snapshots from child datasets
             if not args.recursive and not name.startswith(dataset+"@"):
                 continue
             
-            dataset,snapshot = name.split('@',2)
+            try:
+                dataset,snapshot = name.split('@',2)
+            except ValueError:
+                continue
             
             snapshots[dataset][snapshot][property] = value
 
