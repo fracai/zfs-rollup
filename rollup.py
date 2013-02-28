@@ -105,7 +105,7 @@ for interval in used_intervals:
 snapshots = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
 
 for dataset in args.datasets:
-    zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo", "name,property,value", "creation,type,used", dataset])
+    zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo", "name,property,value", "creation,type,used,freenas:state", dataset])
 
     for snapshot in zfs_snapshots.splitlines():
         name,property,value = snapshot.split('\t',3)
@@ -130,7 +130,8 @@ for dataset in args.datasets:
 for dataset in snapshots.keys():
     for snapshot in snapshots[dataset].keys():
         if not snapshot.startswith("auto-") \
-            or snapshots[dataset][snapshot]['type'] != "snapshot":
+            or snapshots[dataset][snapshot]['type'] != "snapshot" \
+            or snapshots[dataset][snapshot]['freenas:state'] != '-':
             del snapshots[dataset][snapshot]
     if not len(snapshots[dataset].keys()):
         del snapshots[dataset]

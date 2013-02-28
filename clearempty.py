@@ -32,7 +32,7 @@ while snapshot_was_deleted:
 
     # Get properties of all snapshots of the selected datasets
     for dataset in args.datasets:
-        zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo name,property,value", "type,creation,used", dataset])
+        zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo name,property,value", "type,creation,used,freenas:state", dataset])
 
         for snapshot in zfs_snapshots.splitlines():
             name,property,value = snapshot.split('\t',3)
@@ -55,6 +55,7 @@ while snapshot_was_deleted:
             if not snapshot.startswith("auto-") \
                 or snapshots[dataset][snapshot]['type'] != "snapshot" \
                 or snapshots[dataset][snapshot]['used'] != '0' \
+                or snapshots[dataset][snapshot]['freenas:state'] != '-' \
                 or snapshot in deleted[dataset].keys():
                 del snapshots[dataset][snapshot]
 
