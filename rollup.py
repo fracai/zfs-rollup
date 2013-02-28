@@ -120,7 +120,7 @@ for dataset in args.datasets:
             continue
         
         # enforce that this is an automated snapshot (presence of 'auto')
-        if "auto" not in snapshot:
+        if not snapshot.startswith("auto-"):
             if property == 'creation':
                 print "ignoring:\t", dataset+"@"+snapshot
             continue
