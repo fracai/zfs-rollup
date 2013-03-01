@@ -32,7 +32,11 @@ while snapshot_was_deleted:
 
     # Get properties of all snapshots of the selected datasets
     for dataset in args.datasets:
-        zfs_snapshots = subprocess.check_output(["zfs", "get", "-Hrpo name,property,value", "type,creation,used,freenas:state", dataset])
+        subp = subprocess.Popen(["zfs", "get", "-Hrpo", "name,property,value", "type,creation,used,freenas:state", dataset], stdout=subprocess.PIPE)
+        zfs_snapshots = subp.communicate()[0]
+        if subp.returncode:
+            print "zfs get failed with RC=%s" % subp.returncode
+            sys.exit(1)
 
         for snapshot in zfs_snapshots.splitlines():
             name,property,value = snapshot.split('\t',3)
