@@ -153,7 +153,7 @@ for dataset in snapshots.keys():
 for dataset in sorted(snapshots.keys()):
     print dataset
     
-    sorted_snapshots = sorted(snapshots[dataset].keys())
+    sorted_snapshots = sorted(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'], reverse=True)
     most_recent = sorted_snapshots[-1]
     
     rollup_intervals = defaultdict(lambda : defaultdict(int))
