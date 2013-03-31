@@ -132,13 +132,23 @@ for dataset in args.datasets:
         snapshots[dataset][snapshot][property] = value
 
 for dataset in snapshots.keys():
-    for snapshot in snapshots[dataset].keys():
+    latestNEW = None
+    for snapshot in sorted(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'], reverse=True):
         if not snapshot.startswith("auto-") \
-            or snapshots[dataset][snapshot]['type'] != "snapshot" \
-            or snapshots[dataset][snapshot]['freenas:state'] != '-':
+            or snapshots[dataset][snapshot]['type'] != "snapshot":
             del snapshots[dataset][snapshot]
+            continue
+        if not latestNEW and snapshots[dataset][snapshot]['freenas:state'] == 'NEW':
+            latestNEW = snapshot
+            del snapshots[dataset][snapshot]
+            continue
+        if snapshots[dataset][snapshot]['freenas:state'] != 'LATEST':
+            del snapshots[dataset][snapshot]
+            continue
+            
     if not len(snapshots[dataset].keys()):
         del snapshots[dataset]
+        continue
 
 for dataset in sorted(snapshots.keys()):
     print dataset
