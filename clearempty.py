@@ -56,19 +56,24 @@ while snapshot_was_deleted:
     # Remove already destroyed snapshots
     for dataset in snapshots.keys():
         latest = None
+        latestNEW = None
         for snapshot in sorted(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'], reverse=True):
             if not snapshot.startswith("auto-") \
                 or snapshots[dataset][snapshot]['type'] != "snapshot":
                 del snapshots[dataset][snapshot]
                 continue
-
             if not latest:
                 latest = snapshot
                 del snapshots[dataset][snapshot]
                 continue
-
+            if not latestNEW and snapshots[dataset][snapshot]['freenas:state'] == 'NEW':
+                latestNEW = snapshot
+                del snapshots[dataset][snapshot]
+                continue
+            if snapshots[dataset][snapshot]['freenas:state'] != 'LATEST':
+                del snapshots[dataset][snapshot]
+                continue
             if snapshots[dataset][snapshot]['used'] != '0' \
-                or snapshots[dataset][snapshot]['freenas:state'] != '-' \
                 or snapshot in deleted[dataset].keys():
                 del snapshots[dataset][snapshot]
                 continue
