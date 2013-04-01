@@ -142,7 +142,7 @@ for dataset in snapshots.keys():
             latestNEW = snapshot
             del snapshots[dataset][snapshot]
             continue
-        if snapshots[dataset][snapshot]['freenas:state'] != 'LATEST':
+        if snapshots[dataset][snapshot]['freenas:state'] == 'LATEST':
             del snapshots[dataset][snapshot]
             continue
             

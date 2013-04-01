@@ -70,7 +70,7 @@ while snapshot_was_deleted:
                 latestNEW = snapshot
                 del snapshots[dataset][snapshot]
                 continue
-            if snapshots[dataset][snapshot]['freenas:state'] != 'LATEST':
+            if snapshots[dataset][snapshot]['freenas:state'] == 'LATEST':
                 del snapshots[dataset][snapshot]
                 continue
             if snapshots[dataset][snapshot]['used'] != '0' \
