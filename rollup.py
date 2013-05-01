@@ -48,14 +48,16 @@ used_intervals = {
 }
 
 parser = argparse.ArgumentParser(description='Prune excess snapshots, keeping hourly for the last day, daily for the last week, and weekly thereafter.')
-parser.add_argument('datasets', nargs='+', help='the root dataset(s) from which to prune snapshots')
-parser.add_argument('--test', '-t', action="store_true", default=False, help='only display the snapshots that would be deleted, without actually deleting them')
-parser.add_argument('--verbose', '-v', action="store_true", default=False, help='display verbose information about which snapshots are kept, pruned, and why')
-parser.add_argument('--recursive', '-r', action="store_true", default=False, help='recursively pruning snapshots from nested datasets')
-parser.add_argument("--intervals", "-i", 
-    help="modify existing and define new snapshot intervals. either name existing intervals ("+", ".join(intervals.keys())+"), "+
+parser.add_argument('datasets', nargs='+', help='The root dataset(s) from which to prune snapshots')
+parser.add_argument('-t', '--test', action="store_true", default=False, help='Only display the snapshots that would be deleted, without actually deleting them')
+parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Display verbose information about which snapshots are kept, pruned, and why')
+parser.add_argument('-r', '--recursive', action="store_true", default=False, help='Recursively prune snapshots from nested datasets')
+parser.add_argument('-i', '--intervals', 
+    help="Modify and define intervals with which to keep and prune snapshots. Either name existing intervals ("+
+    ", ".join(sorted(intervals, key=lambda interval: modifiers[intervals[interval]['abbreviation']]))+"), "+
     "modify the number of those to store (hourly:12), or define new intervals according to interval:count (2h:12). "+
-    "Multiple intervals may be specified if comma seperated (hourly,daily:30,2h12)."
+    "Multiple intervals may be specified if comma seperated (hourly,daily:30,2h12). Available modifier abbreviations are: "+
+    ", ".join(sorted(modifiers, key=modifiers.get))
 )
 
 args = parser.parse_args()
