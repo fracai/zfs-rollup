@@ -34,7 +34,7 @@ intervals['monthly'] = { 'max':12, 'abbreviation':'m', 'reference':'%Y-%m' }
 intervals['yearly']  = { 'max':10, 'abbreviation':'y', 'reference':'%Y' }
 
 modifiers = {
-    'M' : 1/60,
+    'M' : 1,
     'H' : 60,
     'h' : 60,
     'd' : 60*24,
