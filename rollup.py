@@ -54,6 +54,7 @@ parser.add_argument('datasets', nargs='+', help='The root dataset(s) from which 
 parser.add_argument('-t', '--test', action="store_true", default=False, help='Only display the snapshots that would be deleted, without actually deleting them')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Display verbose information about which snapshots are kept, pruned, and why')
 parser.add_argument('-r', '--recursive', action="store_true", default=False, help='Recursively prune snapshots from nested datasets')
+parser.add_argument('-c', '--clear', action="store_true", default=False, help='remove all snapshots')
 parser.add_argument('-i', '--intervals', 
     help="Modify and define intervals with which to keep and prune snapshots. Either name existing intervals ("+
     ", ".join(sorted(intervals, key=lambda interval: modifiers[intervals[interval]['abbreviation']]))+"), "+
@@ -164,7 +165,10 @@ for dataset in sorted(snapshots.keys()):
     
     for snapshot in sorted_snapshots:
         prune = True
-
+        
+        if args.clear:
+            continue
+        
         epoch = snapshots[dataset][snapshot]['creation']
         
         for interval in used_intervals.keys():
