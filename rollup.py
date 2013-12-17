@@ -138,17 +138,22 @@ for dataset in args.datasets:
 
 for dataset in snapshots.keys():
     latestNEW = None
+    latest = None
     for snapshot in sorted(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'], reverse=True):
+        if not latest:
+            latest = snapshot
+            snapshots[dataset][snapshot]['keep'] = 'RECENT'
+            continue
         if not snapshot.startswith("auto-") \
             or snapshots[dataset][snapshot]['type'] != "snapshot":
-            del snapshots[dataset][snapshot]
+            snapshots[dataset][snapshot]['keep'] = '!AUTOSNAP'
             continue
         if not latestNEW and snapshots[dataset][snapshot]['freenas:state'] == 'NEW':
             latestNEW = snapshot
-            del snapshots[dataset][snapshot]
+            snapshots[dataset][snapshot]['keep'] = 'NEW'
             continue
         if snapshots[dataset][snapshot]['freenas:state'] == 'LATEST':
-            del snapshots[dataset][snapshot]
+            snapshots[dataset][snapshot]['keep'] = 'LATEST'
             continue
             
     if not len(snapshots[dataset].keys()):
@@ -192,6 +197,9 @@ for dataset in sorted(snapshots.keys()):
         
         epoch = snapshots[dataset][snapshot]['creation']
         
+        if 'keep' in snapshots[dataset][snapshot]:
+            prune = False
+            
         for interval in used_intervals.keys():
             if 'reference' in used_intervals[interval]:
                 reference = time.strftime(used_intervals[interval]['reference'], time.gmtime(float(epoch)))
@@ -217,6 +225,10 @@ for dataset in sorted(snapshots.keys()):
                             print used_intervals[interval]['abbreviation'],
                         else:
                             print '-',
+                if 'keep' in snapshots[dataset][snapshot]:
+                    print snapshots[dataset][snapshot]['keep'][0],
+                else:
+                    print '-',
                 print snapshots[dataset][snapshot]['used']
             else:
                 print
