@@ -13,6 +13,7 @@
 
 import subprocess
 import argparse
+import sys
 from collections import defaultdict
 
 parser = argparse.ArgumentParser(description='Removes empty auto snapshots.')
