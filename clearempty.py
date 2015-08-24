@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description='Removes empty auto snapshots.')
 parser.add_argument('datasets', nargs='+', help='the root dataset(s) from which to remove snapshots')
 parser.add_argument('--test', '-t', action="store_true", default=False, help='only display the snapshots that would be deleted, without actually deleting them. Note that due to dependencies between snapshots, this may not match what would really happen.')
 parser.add_argument('--recursive', '-r', action="store_true", default=False, help='recursively removes snapshots from nested datasets')
-parser.add_argument('--prefix', '-p', action='append, default=list('auto'), help='list of snapshot name prefixes that will be considered')
+parser.add_argument('--prefix', '-p', action='append', default=list('auto'), help='list of snapshot name prefixes that will be considered')
 
 args = parser.parse_args()
 
