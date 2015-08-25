@@ -54,7 +54,7 @@ parser.add_argument('datasets', nargs='+', help='The root dataset(s) from which 
 parser.add_argument('-t', '--test', action="store_true", default=False, help='Only display the snapshots that would be deleted, without actually deleting them')
 parser.add_argument('-v', '--verbose', action="store_true", default=False, help='Display verbose information about which snapshots are kept, pruned, and why')
 parser.add_argument('-r', '--recursive', action="store_true", default=False, help='Recursively prune snapshots from nested datasets')
-parser.add_argument('--prefix', '-p', action='append', default=list('auto'), help='list of snapshot name prefixes that will be considered')
+parser.add_argument('--prefix', '-p', action='append', help='list of snapshot name prefixes that will be considered')
 parser.add_argument('-c', '--clear', action="store_true", default=False, help='remove all snapshots')
 parser.add_argument('-i', '--intervals', 
     help="Modify and define intervals with which to keep and prune snapshots. Either name existing intervals ("+
@@ -66,7 +66,10 @@ parser.add_argument('-i', '--intervals',
 
 args = parser.parse_args()
 
-args.prefix = map(lambda prefix: prefix+"-")
+if not args.prefix:
+    args.prefix = ['auto']
+
+args.prefix = map(lambda prefix: prefix+"-", set(args.prefix))
 
 if args.test:
     args.verbose = True
@@ -131,8 +134,9 @@ for dataset in args.datasets:
         except ValueError:
             continue
         
-        # enforce that this is an automated snapshot (presence of 'auto')
-        if not snapshot.startswith("auto-"):
+        # enforce that this is a snapshot starting with one of the requested prefixes
+        if not any(map(snapshot.startswith, args.prefix)):
+#        if not snapshot.startswith("auto-"):
             if property == 'creation':
                 print "ignoring:\t", dataset+"@"+snapshot
             continue
