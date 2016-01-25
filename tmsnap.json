@@ -1,0 +1,7 @@
+{
+    "username":"root",
+    "password":"freenas_root_password",
+    "host":"freenas_hostname",
+    "dataset":"tank/TimeMachine/dataset",
+    "log_path":"/var/log/system.log"
+}
