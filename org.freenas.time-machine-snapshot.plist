@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>Label</key>
+    <string>org.freenas.time-machine-snapshot</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONPATH</key>
+        <string>/paths/to/any/python/packages</string>
+    </dict>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/path/to/freenas/time-machine-snapshot/tmsnap.py</string>
+        <string>--config</string>
+        <string>/path/to/freenas/time-machine-snapshot/tmsnap.json</string>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>/Library/Logs/time-machine-snapshot.log</string>
+    <key>StandardOutPath</key>
+    <string>/Library/Logs/time-machine-snapshot.log</string>
+</dict>
+</plist>
