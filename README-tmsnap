@@ -8,6 +8,8 @@ Status information about running backups are written to /var/log/system.log and 
 Because system.log is owned by root and is not world readable, the tmsnap script needs to run as root as well.
 
 The standard location for root owned launchd tasks is: /Library/LaunchDaemons
+I have used the prefix 'fracai.zfs-rollup' for the launchd plist, but it can be customized as desired.
+Be sure to change the value for the 'Label' key within the plist as well.
 
 tmsnap.py uses a number of Python packages that may not be available with the default installation.
 The easiest way to satisfy these is via a virtualenv.
@@ -20,4 +22,4 @@ The configuration file also contains settings for the system.log location and th
 The Python script and configuration can be located anywhere as long as the launchd plist is modified accordingly.
 
 With everything in place, the tmsnap process can be activiated via launchd with:
-`launchctl load -w /Library/LaunchDaemons/org.freenas.time-machine-snapshot.plist`
+`launchctl load -w /Library/LaunchDaemons/fracai.zfs-rollup.time-machine-snapshot.plist`

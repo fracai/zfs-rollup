@@ -7,7 +7,7 @@
     <key>RunAtLoad</key>
     <true/>
     <key>Label</key>
-    <string>org.freenas.time-machine-snapshot</string>
+    <string>fracai.zfs-rollup.time-machine-snapshot</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>PYTHONPATH</key>
@@ -15,9 +15,9 @@
     </dict>
     <key>ProgramArguments</key>
     <array>
-        <string>/path/to/freenas/time-machine-snapshot/tmsnap.py</string>
+        <string>/path/to/time-machine-snapshot/tmsnap.py</string>
         <string>--config</string>
-        <string>/path/to/freenas/time-machine-snapshot/tmsnap.json</string>
+        <string>/path/to/time-machine-snapshot/tmsnap.json</string>
     </array>
     <key>StandardErrorPath</key>
     <string>/Library/Logs/time-machine-snapshot.log</string>
