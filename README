@@ -25,6 +25,8 @@ remove one snapshot at a time from a given dataset and then scan for additional
 empty snapshots.
 
 ## TM Snap
+See also README-tmsnap
+
 This is a script to be run on a Mac OS X machine. It will 
 scan the system.log and act on messages from "backupd" to create a new 
 snapshot on a FreeNAS machine that is providing the TimeMachine target.
