@@ -38,9 +38,9 @@ IE. `snap-strip.py tank tank/dataset | bash`
 ## TM Snap
 See also README-tmsnap
 
-This is a script to be run on a Mac OS X machine. It will
-scan the system.log and act on messages from "backupd" to create a new
-snapshot on a FreeNAS machine that is providing the TimeMachine target.
+This is a script to be run on a macOS machine. It will scan the system.log and 
+act on messages from "backupd" to create a new snapshot on a FreeNAS machine 
+that is providing the TimeMachine target.
 
 It is not uncommon for TimeMachine to corrupt the TimeMachine volume
 sparsebundle, especially when connected over a wireless network. Corruption
@@ -52,7 +52,7 @@ These issues can sometimes be resolved by stopping any current backups,
 disabling the TimeMachine service to prevent another backup from starting, and
 rolling back the TimeMachine dataset to an earlier snapshot before the issues
 started. Rolling back like this isn't guaranteed to resolve issues, and may
-lead to missing backups if the Mac OS X machine does not detect that it needs
+lead to missing backups if the macOS machine does not detect that it needs 
 perform a full scan prior to backing up. In the worst case, the dataset can be
 rolled back to an empty state if such a snapshot exists.
 
