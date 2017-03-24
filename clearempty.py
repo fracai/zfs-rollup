@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # clearempty.py - Koen Vermeer <k.vermeer@eyehospital.nl>
 # Inspired by rollup.py by Arno Hautala <arno@alum.wpi.edu>
