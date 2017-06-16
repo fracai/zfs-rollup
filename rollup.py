@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # rollup.py - Arno Hautala <arno@alum.wpi.edu>
 #   This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
