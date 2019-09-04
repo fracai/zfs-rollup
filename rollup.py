@@ -137,8 +137,7 @@ for dataset in args.datasets:
         # enforce that this is a snapshot starting with one of the requested prefixes
         if not any(map(snapshot.startswith, args.prefix)):
             if property == 'creation':
-                print "ignoring:\t", dataset+"@"+snapshot
-            continue
+                print "will ignore:\t", dataset+"@"+snapshot
         
         snapshots[dataset][snapshot][property] = value
 
@@ -161,10 +160,9 @@ for dataset in snapshots.keys():
         if snapshots[dataset][snapshot]['freenas:state'] == 'LATEST':
             snapshots[dataset][snapshot]['keep'] = 'LATEST'
             continue
-            
+
     if not len(snapshots[dataset].keys()):
         del snapshots[dataset]
-        continue
 
 for dataset in sorted(snapshots.keys()):
     print dataset
@@ -197,7 +195,9 @@ for dataset in sorted(snapshots.keys()):
                 
                 if (not rollup_intervals[interval]) or int(sorted(rollup_intervals[interval].keys())[-1]) + (used_intervals[interval]['interval']*60*.9) < int(epoch):
                     rollup_intervals[interval][epoch] = epoch
-        
+    
+    ranges = list()
+    ranges.append(list())
     for snapshot in sorted_snapshots:
         prune = True
         
@@ -205,16 +205,20 @@ for dataset in sorted(snapshots.keys()):
         
         if 'keep' in snapshots[dataset][snapshot]:
             prune = False
+            ranges.append(list())
+            
             
         for interval in used_intervals.keys():
             if 'reference' in used_intervals[interval]:
                 reference = time.strftime(used_intervals[interval]['reference'], time.gmtime(float(epoch)))
                 if reference in rollup_intervals[interval] and rollup_intervals[interval][reference] == epoch:
                     prune = False
+                    ranges.append(list())
                     
             elif 'interval' in used_intervals[interval]:
                 if epoch in rollup_intervals[interval]:
                     prune = False
+                    ranges.append(list())
 
         if prune or args.verbose:
             print "\t","pruning\t" if prune else " \t", "@"+snapshot, 
@@ -238,10 +242,21 @@ for dataset in sorted(snapshots.keys()):
                 print snapshots[dataset][snapshot]['used']
             else:
                 print
-        
+
         if prune:
-            if (not args.test):
-                # destroy the snapshot
-                if args.verbose:
-                    print 'zfs destroy', dataset+'@'+snapshot
-                subprocess.call(['zfs', 'destroy', dataset+'@'+snapshot])
+            ranges[-1].append(snapshot)
+
+    for range in ranges:
+        if not range:
+            continue
+        to_delete = dataset+'@'+range[0]
+        if len(range) > 1:
+            to_delete += '%' + range[-1]
+        to_delete = to_delete.replace(' ', '')
+        if not to_delete:
+            continue
+        if args.verbose:
+            print 'zfs destroy ' + to_delete
+        if not args.test:
+            # destroy the snapshot
+            subprocess.call(['zfs', 'destroy', to_delete])
