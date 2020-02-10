@@ -27,7 +27,7 @@ args = parser.parse_args()
 if not args.prefix:
     args.prefix = ['auto']
 
-args.prefix = map(lambda prefix: prefix+"-", set(args.prefix))
+args.prefix = [prefix+"-" for prefix in set(args.prefix)]
 
 deleted = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
 
@@ -42,7 +42,7 @@ while snapshot_was_deleted:
         subp = subprocess.Popen(["zfs", "get", "-Hrpo", "name,property,value", "type,creation,used,freenas:state", dataset], stdout=subprocess.PIPE)
         zfs_snapshots = subp.communicate()[0]
         if subp.returncode:
-            print "zfs get failed with RC=%s" % subp.returncode
+            print("zfs get failed with RC=%s" % subp.returncode)
             sys.exit(1)
 
         for snapshot in zfs_snapshots.splitlines():
@@ -61,7 +61,7 @@ while snapshot_was_deleted:
 
     # Ignore non-snapshots and not-auto-snapshots
     # Remove already destroyed snapshots
-    for dataset in snapshots.keys():
+    for dataset in list(snapshots.keys()):
         latest = None
         latestNEW = None
         for snapshot in sorted(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'], reverse=True):
@@ -81,7 +81,7 @@ while snapshot_was_deleted:
                 del snapshots[dataset][snapshot]
                 continue
             if snapshots[dataset][snapshot]['used'] != '0' \
-                or snapshot in deleted[dataset].keys():
+                or snapshot in list(deleted[dataset].keys()):
                 del snapshots[dataset][snapshot]
                 continue
 
@@ -102,6 +102,6 @@ while snapshot_was_deleted:
 for dataset in sorted(deleted.keys()):
     if not deleted[dataset]:
         continue
-    print dataset
+    print(dataset)
     for snapshot in sorted(deleted[dataset].keys()):
-        print "\t", snapshot, deleted[dataset][snapshot]['used']
+        print("\t", snapshot, deleted[dataset][snapshot]['used'])

@@ -6,6 +6,7 @@ from multitail import multitail
 import re, os
 import argparse
 import logging
+from functools import reduce
 
 TM_PREFIX = re.compile("com\.apple\.backupd\[\d+\]:[ \t]*")
 TM_STARTED = re.compile("Starting (?:automatic|manual) backup")
@@ -71,7 +72,7 @@ for fn, line in multitail([config['log_path']]):
         latest_completed_backup = None
         logging.info("started new backup")
         continue
-    if reduce((lambda x,y: x or y), map(lambda x: x in line, TM_ERROR)):
+    if reduce((lambda x,y: x or y), [x in line for x in TM_ERROR]):
         logging.error("backup error: "+line[match.end():])
         latest_completed_backup = None
         continue

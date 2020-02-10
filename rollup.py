@@ -69,7 +69,7 @@ args = parser.parse_args()
 if not args.prefix:
     args.prefix = ['auto']
 
-args.prefix = map(lambda prefix: prefix+"-", set(args.prefix))
+args.prefix = [prefix+"-" for prefix in set(args.prefix)]
 
 if args.test:
     args.verbose = True
@@ -84,7 +84,7 @@ if args.intervals:
             try:
                 int(count)
             except ValueError:
-                print "invalid count: "+count
+                print("invalid count: "+count)
                 sys.exit(1)
             
             if period in intervals:
@@ -99,14 +99,14 @@ if args.intervals:
                         used_intervals[interval] = { 'max' : count, 'interval' : int(period) }
                         
                 except ValueError:
-                    print "invalid period: "+period
+                    print("invalid period: "+period)
                     sys.exit(1)
                     
         elif interval.count(':') == 0 and interval in intervals:
             used_intervals[interval] = intervals[interval]
             
         else:
-            print "invalid interval: "+interval
+            print("invalid interval: "+interval)
             sys.exit(1)            
 
 for interval in used_intervals:
@@ -119,7 +119,7 @@ for dataset in args.datasets:
     subp = subprocess.Popen(["zfs", "get", "-Hrpo", "name,property,value", "creation,type,used,freenas:state", dataset], stdout=subprocess.PIPE)
     zfs_snapshots = subp.communicate()[0]
     if subp.returncode:
-        print "zfs get failed with RC=%s" % subp.returncode
+        print("zfs get failed with RC=%s" % subp.returncode)
         sys.exit(1)
 
     for snapshot in zfs_snapshots.splitlines():
@@ -137,11 +137,11 @@ for dataset in args.datasets:
         # enforce that this is a snapshot starting with one of the requested prefixes
         if not any(map(snapshot.startswith, args.prefix)):
             if property == 'creation':
-                print "will ignore:\t", dataset+"@"+snapshot
+                print("will ignore:\t", dataset+"@"+snapshot)
         
         snapshots[dataset][snapshot][property] = value
 
-for dataset in snapshots.keys():
+for dataset in list(snapshots.keys()):
     latestNEW = None
     latest = None
     for snapshot in sorted(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'], reverse=True):
@@ -161,11 +161,11 @@ for dataset in snapshots.keys():
             snapshots[dataset][snapshot]['keep'] = 'LATEST'
             continue
 
-    if not len(snapshots[dataset].keys()):
+    if not len(list(snapshots[dataset].keys())):
         del snapshots[dataset]
 
 for dataset in sorted(snapshots.keys()):
-    print dataset
+    print(dataset)
     
     sorted_snapshots = sorted(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'])
     most_recent = sorted_snapshots[-1]
@@ -180,7 +180,7 @@ for dataset in sorted(snapshots.keys()):
         
         epoch = snapshots[dataset][snapshot]['creation']
         
-        for interval in used_intervals.keys():
+        for interval in list(used_intervals.keys()):
             if 'reference' in used_intervals[interval]:
                 reference = time.strftime(used_intervals[interval]['reference'], time.gmtime(float(epoch)))
                 
@@ -208,7 +208,7 @@ for dataset in sorted(snapshots.keys()):
             ranges.append(list())
             
             
-        for interval in used_intervals.keys():
+        for interval in list(used_intervals.keys()):
             if 'reference' in used_intervals[interval]:
                 reference = time.strftime(used_intervals[interval]['reference'], time.gmtime(float(epoch)))
                 if reference in rollup_intervals[interval] and rollup_intervals[interval][reference] == epoch:
@@ -221,27 +221,27 @@ for dataset in sorted(snapshots.keys()):
                     ranges.append(list())
 
         if prune or args.verbose:
-            print "\t","pruning\t" if prune else " \t", "@"+snapshot, 
+            print("\t","pruning\t" if prune else " \t", "@"+snapshot, end=' ') 
             if args.verbose:
-                for interval in used_intervals.keys():
+                for interval in list(used_intervals.keys()):
                     if 'reference' in used_intervals[interval]:
                         reference = time.strftime(used_intervals[interval]['reference'], time.gmtime(float(epoch)))
                         if reference in rollup_intervals[interval] and rollup_intervals[interval][reference] == epoch:
-                            print used_intervals[interval]['abbreviation'],
+                            print(used_intervals[interval]['abbreviation'], end=' ')
                         else:
-                            print '-',
+                            print('-', end=' ')
                     if 'interval' in used_intervals[interval]:
                         if epoch in rollup_intervals[interval]:
-                            print used_intervals[interval]['abbreviation'],
+                            print(used_intervals[interval]['abbreviation'], end=' ')
                         else:
-                            print '-',
+                            print('-', end=' ')
                 if 'keep' in snapshots[dataset][snapshot]:
-                    print snapshots[dataset][snapshot]['keep'][0],
+                    print(snapshots[dataset][snapshot]['keep'][0], end=' ')
                 else:
-                    print '-',
-                print snapshots[dataset][snapshot]['used']
+                    print('-', end=' ')
+                print(snapshots[dataset][snapshot]['used'])
             else:
-                print
+                print()
 
         if prune:
             ranges[-1].append(snapshot)
@@ -256,7 +256,7 @@ for dataset in sorted(snapshots.keys()):
         if not to_delete:
             continue
         if args.verbose:
-            print 'zfs destroy ' + to_delete
+            print('zfs destroy ' + to_delete)
         if not args.test:
             # destroy the snapshot
             subprocess.call(['zfs', 'destroy', to_delete])
