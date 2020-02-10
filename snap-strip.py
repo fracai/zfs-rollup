@@ -41,7 +41,7 @@ for dataset in args.datasets:
         sys.exit(1)
 
     for snapshot in zfs_snapshots.splitlines():
-        name,property,value = snapshot.split('\t',3)
+        name,property,value = snapshot.decode().split('\t',3)
 
         # if the rollup isn't recursive, skip any snapshots from child datasets
         if not args.recursive and not name.startswith(dataset+"@"):
