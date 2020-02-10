@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # snap-strip.py by Arno Hautala <arno@alum.wpi.edu>
 # modifications by Arno Hautala

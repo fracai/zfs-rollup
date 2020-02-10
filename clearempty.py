@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # clearempty.py - Koen Vermeer <k.vermeer@eyehospital.nl>
 # Inspired by rollup.py by Arno Hautala <arno@alum.wpi.edu>
@@ -51,12 +51,12 @@ while snapshot_was_deleted:
             # if the rollup isn't recursive, skip any snapshots from child datasets
             if not args.recursive and not name.startswith(dataset+"@"):
                 continue
-            
+
             try:
                 dataset,snapshot = name.split('@',2)
             except ValueError:
                 continue
-            
+
             snapshots[dataset][snapshot][property] = value
 
     # Ignore non-snapshots and not-auto-snapshots
