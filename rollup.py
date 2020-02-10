@@ -11,7 +11,7 @@
 # A snapshot pruning script, similar in behavior to Apple's TimeMachine
 # Keep hourly snapshots for the last day, daily for the last week, and weekly thereafter.
 
-# TODO: 
+# TODO:
 #   rollup based on local time, not UTC
 #     requires pytz, or manually determining and converting time offsets
 #   improve documentation
@@ -56,7 +56,7 @@ parser.add_argument('-v', '--verbose', action="store_true", default=False, help=
 parser.add_argument('-r', '--recursive', action="store_true", default=False, help='Recursively prune snapshots from nested datasets')
 parser.add_argument('--prefix', '-p', action='append', help='list of snapshot name prefixes that will be considered')
 parser.add_argument('-c', '--clear', action="store_true", default=False, help='remove all snapshots')
-parser.add_argument('-i', '--intervals', 
+parser.add_argument('-i', '--intervals',
     help="Modify and define intervals with which to keep and prune snapshots. Either name existing intervals ("+
     ", ".join(sorted(intervals, key=lambda interval: modifiers[intervals[interval]['abbreviation']]))+"), "+
     "modify the number of those to store (hourly:12), or define new intervals according to interval:count (2h:12). "+
@@ -76,38 +76,38 @@ if args.test:
 
 if args.intervals:
     used_intervals = {}
-    
+
     for interval in args.intervals.split(','):
         if interval.count(':') == 1:
             period,count = interval.split(':')
-            
+
             try:
                 int(count)
             except ValueError:
                 print("invalid count: "+count)
                 sys.exit(1)
-            
+
             if period in intervals:
                 used_intervals[period] = intervals[period]
                 used_intervals[period]['max'] = count
-                
+
             else:
                 try:
                     if period[-1] in modifiers:
                         used_intervals[interval] = { 'max' : count, 'interval' : int(period[:-1]) * modifiers[period[-1]] }
                     else:
                         used_intervals[interval] = { 'max' : count, 'interval' : int(period) }
-                        
+
                 except ValueError:
                     print("invalid period: "+period)
                     sys.exit(1)
-                    
+
         elif interval.count(':') == 0 and interval in intervals:
             used_intervals[interval] = intervals[interval]
-            
+
         else:
             print("invalid interval: "+interval)
-            sys.exit(1)            
+            sys.exit(1)
 
 for interval in used_intervals:
     if 'abbreviation' not in used_intervals[interval]:
@@ -123,22 +123,22 @@ for dataset in args.datasets:
         sys.exit(1)
 
     for snapshot in zfs_snapshots.splitlines():
-        name,property,value = snapshot.split('\t',3)
+        name,property,value = snapshot.decode().split('\t',3)
 
         # if the rollup isn't recursive, skip any snapshots from child datasets
         if not args.recursive and not name.startswith(dataset+"@"):
             continue
-        
+
         try:
             dataset,snapshot = name.split('@',2)
         except ValueError:
             continue
-        
+
         # enforce that this is a snapshot starting with one of the requested prefixes
         if not any(map(snapshot.startswith, args.prefix)):
             if property == 'creation':
                 print("will ignore:\t", dataset+"@"+snapshot)
-        
+
         snapshots[dataset][snapshot][property] = value
 
 for dataset in list(snapshots.keys()):
@@ -166,62 +166,62 @@ for dataset in list(snapshots.keys()):
 
 for dataset in sorted(snapshots.keys()):
     print(dataset)
-    
+
     sorted_snapshots = sorted(snapshots[dataset], key=lambda snapshot: snapshots[dataset][snapshot]['creation'])
     most_recent = sorted_snapshots[-1]
-    
+
     rollup_intervals = defaultdict(lambda : defaultdict(int))
-    
+
     for snapshot in sorted_snapshots:
         prune = True
-        
+
         if args.clear:
             continue
-        
+
         epoch = snapshots[dataset][snapshot]['creation']
-        
+
         for interval in list(used_intervals.keys()):
             if 'reference' in used_intervals[interval]:
                 reference = time.strftime(used_intervals[interval]['reference'], time.gmtime(float(epoch)))
-                
+
                 if reference not in rollup_intervals[interval]:
                     if int(used_intervals[interval]['max']) != 0 and len(rollup_intervals[interval]) >= int(used_intervals[interval]['max']):
                         rollup_intervals[interval].pop(sorted(rollup_intervals[interval].keys())[0])
                     rollup_intervals[interval][reference] = epoch
-            
+
             elif 'interval' in used_intervals[interval]:
                 if int(used_intervals[interval]['max']) != 0 and len(rollup_intervals[interval]) >= int(used_intervals[interval]['max']):
                     rollup_intervals[interval].pop(sorted(rollup_intervals[interval].keys())[0])
-                
+
                 if (not rollup_intervals[interval]) or int(sorted(rollup_intervals[interval].keys())[-1]) + (used_intervals[interval]['interval']*60*.9) < int(epoch):
                     rollup_intervals[interval][epoch] = epoch
-    
+
     ranges = list()
     ranges.append(list())
     for snapshot in sorted_snapshots:
         prune = True
-        
+
         epoch = snapshots[dataset][snapshot]['creation']
-        
+
         if 'keep' in snapshots[dataset][snapshot]:
             prune = False
             ranges.append(list())
-            
-            
+
+
         for interval in list(used_intervals.keys()):
             if 'reference' in used_intervals[interval]:
                 reference = time.strftime(used_intervals[interval]['reference'], time.gmtime(float(epoch)))
                 if reference in rollup_intervals[interval] and rollup_intervals[interval][reference] == epoch:
                     prune = False
                     ranges.append(list())
-                    
+
             elif 'interval' in used_intervals[interval]:
                 if epoch in rollup_intervals[interval]:
                     prune = False
                     ranges.append(list())
 
         if prune or args.verbose:
-            print("\t","pruning\t" if prune else " \t", "@"+snapshot, end=' ') 
+            print("\t","pruning\t" if prune else " \t", "@"+snapshot, end=' ')
             if args.verbose:
                 for interval in list(used_intervals.keys()):
                     if 'reference' in used_intervals[interval]:
