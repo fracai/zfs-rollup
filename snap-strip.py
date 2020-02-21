@@ -110,10 +110,13 @@ for dataset in sorted(snapshots.keys()):
     range_start = None
     range_end = None
 
-command = "zfs destroy "
+command = ['zfs', 'destroy']
 if args.test:
-    command += "-n "
+    command.append('-n')
 if args.verbose:
-    command += "-v "
+    command.append('-v')
 for target in delete_targets:
-    print(command + target)
+    print(' '.join(command + [target]))
+    if not args.test:
+        # destroy the snapshot
+        subprocess.call(command + [target])
