@@ -36,7 +36,7 @@ the actions. This works with dryrun and verbose modes as well.
 IE. `snap-strip.py tank tank/dataset | bash`
 
 ## TM Snap
-See also README-tmsnap
+See also README-tmsnap.md
 
 This is a script to be run on a macOS machine. It will scan the system.log and 
 act on messages from "backupd" to create a new snapshot on a FreeNAS machine 
